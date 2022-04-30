@@ -105,7 +105,7 @@ class DirInfo:
         while len(checkdirs) > 0:
             subdir = checkdirs.pop(0)
             files.extend([os.path.join(subdir.path, f) for f in subdir.files])
-            checkdirs = [d for d in subdir.subdirs if not d.is_datadir()]
+            checkdirs.extend([d for d in subdir.subdirs if not d.is_datadir()])
 
         # we now have a list of files this data folder provides
         # convert them to paths relative to the archive
