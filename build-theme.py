@@ -1,189 +1,176 @@
+from configparser import ConfigParser
 from dataclasses import dataclass, field
+from io import StringIO
 import os
-from pprint import pprint
 import zipfile
-import glob
-from pathlib import Path
+import argparse
 
 
-# def scantree(path):
-#     folders = [path]
-
-#     while len(folders) > 0:
-#         path = folders.pop(0)
-
-#         for entry in os.scandir(path):
-#             if entry.is_dir(follow_symlinks=False):
-#                 folders.append(entry.path)
-#             else:
-#                 yield entry
-
-
-# def scantree(path):
-#     for entry in os.scandir(path):
-#         if entry.is_dir(follow_symlinks=False):
-#             yield from scantree(entry.path)
-#         else:
-#             yield entry
-
-
-# for x in scantree(os.path.abspath(os.path.normpath('Neptune VI'))):
-#     print(x.path)
-
-
-# def ass(path):
-#     subdirs = []
-#     for entry in os.scandir(path):
-#         if entry.is_dir(follow_symlinks=False):
-#             sub_rtconfig_path = os.path.join(entry.path, 'rtconfig.txt')
-#             if not os.path.isfile(sub_rtconfig_path):
-#                 subdirs.append(entry.path)
-
-#             continue
-
-#         if entry.name == 'rtconfig.txt':
-
-
-def is_rtconfig(path):
-    return path.lower().endswith("rtconfig.txt")
-
-
-def is_rptheme(path):
-    return path.lower().endswith(".reapertheme")
-
-
-def has_data_file(path):
-    for entry in os.scandir(path):
-        if is_rtconfig(entry.path) or is_rptheme(entry.path):
-            return entry.path
-
-    return False
-
-
-def scan_data_files(path):
-    for entry in os.scandir(path):
-        if entry.is_dir(follow_symlinks=False):
-            yield from scan_data_files(entry.path)
-            continue
-
-        if not (is_rtconfig(entry.path) or is_rptheme(entry.path)):
-            continue
-
-        yield Path(entry.path)
-
-
-def find_root_dirs(path):
-    return set(x.parent for x in scan_data_files(path))
-
-
-# for x in find_root_dirs("."):
-#     print(x)
+parser = argparse.ArgumentParser()
+parser.add_argument("input")
+parser.add_argument("output")
 
 
 @dataclass
 class DirInfo:
-    # the path of this folder
+    # the location of this directory
     path: str
-    # list of subdirectories in this folder, to be further scanned
-    subdirs: list[str] = field(default_factory=list)
-    # whether this folder should be treated as the root folder
-    # a root folder's files will be placed in the root of the resource folder
-    is_root_folder: bool = False
-    # all of the files to be put in the resource folder
-    # data files are excluded from this list (rtconfig and ReaperTheme files)
+    # files in this directory, excluding data files like rtconfig.ini
     files: list[str] = field(default_factory=list)
-    # list of rtconfig.ini contents
-    rtconfigs: list[str] = field(default_factory=list)
-    # list of .ReaperTheme contents
-    rpconfigs: list[str] = field(default_factory=list)
-    # keep going up parent directories, the first parent directory which is also a data directoy will be here
-    # if this is the first folder you scanned, then this is None
-    last_archive_root: str = None
+    # data files this directory
+    datafiles: list[str] = field(default_factory=list)
+    # subdirectories in this directory
+    subdirs: list["DirInfo"] = field(default_factory=list)
+    _datadirs: list["DirInfo"] = None
 
-    def filemap(self):
-        """generate a map from real files to paths in the resource folder"""
+    @staticmethod
+    def is_rtconfig(path):
+        return path.lower().endswith("rtconfig.txt")
 
-        if self.is_root_folder:
-            archive_root = self.path
-
-            return [(f, os.path.split(f)[1]) for f in self.files]
-        else:
-            if self.last_archive_root is None:
-                archive_root = self.path
-            else:
-                archive_root = self.last_archive_root
-
-            return [(f, os.path.relpath(f, archive_root)) for f in self.files]
+    @staticmethod
+    def is_rptheme(path):
+        return path.lower().endswith(".reapertheme")
 
     @classmethod
-    def scan(cls, path, archive_root=None):
-        info = cls(path, last_archive_root=archive_root)
+    def scan(cls, path):
+        # path = os.path.normpath(path)
+        info = cls(path)
+
+        dirpaths = []
 
         for entry in os.scandir(path):
             if entry.is_dir():
-                info.subdirs.append(entry.path)
-            else:  # is file
-                info.files.append(entry.path)
+                dirpaths.append(entry.path)
+            else:
+                if cls.is_rtconfig(entry.path) or cls.is_rptheme(entry.path):
+                    info.datafiles.append(entry.name)
+                else:
+                    info.files.append(entry.name)
 
-                if is_rtconfig(entry.path):
-                    info.is_root_folder = True
-                    with open(entry.path, "r", encoding="utf8") as f:
-                        info.rtconfigs.append(f.read())
-                elif is_rptheme(entry.path):
-                    info.is_root_folder = True
-                    with open(entry.path, "r", encoding="utf8") as f:
-                        info.rpconfigs.append(f.read())
+        for path in dirpaths:
+            subinfo = cls.scan(path)
+            info.subdirs.append(subinfo)
 
         return info
 
-# (input, output)
-# concat rtconfig
-# concat ReaperTheme
-# theme name
+    def is_datadir(self):
+        return len(self.datafiles) > 0
 
-# for x in fuck("theme"):
-x = DirInfo.scan("theme", archive_root='aa')
-pprint(x.__dict__)
-pprint(x.filemap())
+    def datadirs(self: "DirInfo", reload=False):
+        """all directories that have at least 1 datafile"""
+        if self._datadirs is None or reload:
+            self._reload_datadirs()
 
-# def zip_write_folder(zipf, path):
-#     # ziph is zipfile handle
-#     path = os.path.abspath(os.path.normpath(path))
+        return self._datadirs
 
-#     root_path = path
-#     folders = [path]
-#     while len(folders) > 0:
-#         path = folders.pop()
+    def _reload_datadirs(self):
+        """all directories that have at least 1 datafile"""
+        dirs: list["DirInfo"] = []
+        to_check = [self]
 
-#         for entry in os.scandir(path):
-#             if entry.is_file():
-#                 zipf.write(entry.path, os.path.relpath(entry.path, root_path))
-#             else:  # is a folder
-#                 folders.append(entry.path)
+        while len(to_check) > 0:
+            info = to_check.pop(0)
+            to_check.extend(info.subdirs)
+            if info.is_datadir():
+                dirs.append(info)
 
-#     for root, dirs, files in os.walk(path):
-#         for file in files:
-#             ziph.write(
-#                 os.path.join(root, file),
-#                 os.path.relpath(os.path.join(root, file), os.path.join(path, "..")),
-#             )
+        self._datadirs = dirs
 
-# def zipdir(path, ziph):
-#     # ziph is zipfile handle
-#     for root, dirs, files in os.walk(path):
-#         for file in files:
-#             ziph.write(
-#                 os.path.join(root, file),
-#                 os.path.relpath(os.path.join(root, file), os.path.join(path, "..")),
-#             )
+        return dirs
+
+    def _datadir_filemap(self):
+        """
+        generate a partial filemap for a datadir
+        when creating the filemap, we exclude any subfolders that are datadirs:
+
+        - 150/
+            - a.png
+        - 200/
+            - a.png
+        - test/
+            # this folder contains a rtconfig.ini, so this folder will be excluded
+            # please scan this folder separately then add to results
+            - c.png
+            - rtconfig.ini
+        - a.png
+        - b.png
+        """
+        assert self.is_datadir()
+
+        # list of files, using their actual path
+        files = [os.path.join(self.path, f) for f in self.files]
+        # list of directories to check for more files
+        checkdirs = [d for d in self.subdirs if not d.is_datadir()]
+
+        while len(checkdirs) > 0:
+            subdir = checkdirs.pop(0)
+            files.extend([os.path.join(subdir.path, f) for f in subdir.files])
+            checkdirs = [d for d in subdir.subdirs if not d.is_datadir()]
+
+        # we now have a list of files this data folder provides
+        # convert them to paths relative to the archive
+        filemap = [(f, os.path.relpath(f, self.path)) for f in files]
+
+        return filemap
+
+    def filemap(self):
+        allmap = []
+        for info in self.datadirs():
+            allmap.extend(info._datadir_filemap())
+        return allmap
+
+    def build_rtconfig(self):
+        contents = []
+        for info in self.datadirs():
+            files = [f for f in info.datafiles if self.is_rtconfig(f)]
+            for f in files:
+                path = os.path.join(info.path, f)
+                with open(path, "r", encoding="utf8") as f:
+                    contents.append(f.read())
+        return "\n".join(contents)
+
+    def build_rptheme(self):
+        config = ConfigParser()
+
+        for info in self.datadirs():
+            files = [f for f in info.datafiles if self.is_rptheme(f)]
+            for f in files:
+                path = os.path.join(info.path, f)
+                config.read(path)
+
+        with StringIO() as f:
+            config.write(f)
+            f.seek(0)
+            return f.read()
 
 
-# with zipfile.ZipFile("Python.zip", "w", zipfile.ZIP_DEFLATED) as zipf:
-#     zipdir("tmp/", zipf)
+def main():
+    args = parser.parse_args()
 
-# with zipfile.ZipFile("test.ReaperThemeZip", "w", zipfile.ZIP_DEFLATED) as z:
-#     zip_write_folder(z, R"D:\Projects (Misc)\reaper-theme\Neptune VI")
-#     z.writestr("a.txt", 'text A, a for apple')
-#     z.writestr("b.txt", 'text B, b for bee')
-#     z.writestr("b.txt", 'text BBBBBB')
-#     z.writestr("sub\\fuck.txt", 'text FUCK, fuck for fuck')
+    args.input = os.path.abspath(args.input)
+    output_name = os.path.split(args.output)[1]
+    output_stem, output_ext = os.path.splitext(output_name)
+    theme_name = output_stem
+
+    if output_ext.lower() != ".reaperthemezip":
+        raise ValueError("Output extension must be .ReaperThemeZip")
+
+    print(f"Using {theme_name!r} as the theme name.")
+    print(f"Scanning folder: {args.input}")
+
+    info = DirInfo.scan(args.input)
+
+    print(f"Writing ZIP file to {args.output}")
+
+    with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED) as z:
+        for path, arcpath in info.filemap():
+            z.write(path, arcname=os.path.join(theme_name, arcpath))
+
+        z.writestr(f"{theme_name}.ReaperTheme", info.build_rptheme())
+        z.writestr(f"{theme_name}/rtconfig.ini", info.build_rtconfig())
+
+    print("Success!")
+
+
+if __name__ == "__main__":
+    main()
