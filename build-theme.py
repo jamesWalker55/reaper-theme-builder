@@ -139,7 +139,7 @@ class DirInfo:
                 config.read(path)
 
         with StringIO() as f:
-            config.write(f)
+            config.write(f, space_around_delimiters=False)
             f.seek(0)
             return f.read()
 
