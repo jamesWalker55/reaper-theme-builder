@@ -1,0 +1,16 @@
+Find Layout sections in rtconfig.ini
+^Layout.+$\n(?:\n|.)+?EndLayout
+
+Comments
+;.+$
+
+Blank newlines
+^$\n
+
+all sections:
+
+macro
+endmacro
+
+Layout
+EndLayout
