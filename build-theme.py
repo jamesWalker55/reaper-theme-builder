@@ -15,7 +15,7 @@ parser.add_argument("output")
 class DirInfo:
     # the location of this directory
     path: str
-    # files in this directory, excluding data files like rtconfig.ini
+    # files in this directory, excluding data files like rtconfig.txt
     files: list[str] = field(default_factory=list)
     # data files this directory
     datafiles: list[str] = field(default_factory=list)
@@ -88,10 +88,10 @@ class DirInfo:
         - 200/
             - a.png
         - test/
-            # this folder contains a rtconfig.ini, so this folder will be excluded
+            # this folder contains a rtconfig.txt, so this folder will be excluded
             # please scan this folder separately then add to results
             - c.png
-            - rtconfig.ini
+            - rtconfig.txt
         - a.png
         - b.png
         """
@@ -167,7 +167,7 @@ def main():
             z.write(path, arcname=os.path.join(theme_name, arcpath))
 
         z.writestr(f"{theme_name}.ReaperTheme", info.build_rptheme())
-        z.writestr(f"{theme_name}/rtconfig.ini", info.build_rtconfig())
+        z.writestr(f"{theme_name}/rtconfig.txt", info.build_rtconfig())
 
     print("Success!")
 
