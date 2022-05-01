@@ -4,6 +4,7 @@ from io import StringIO
 import os
 import zipfile
 import argparse
+import formatter
 
 
 parser = argparse.ArgumentParser()
@@ -137,6 +138,11 @@ class DirInfo:
             for f in files:
                 path = os.path.join(info.path, f)
                 config.read(path)
+
+        # apply macros
+        for section in config:
+            for key in config[section]:
+                config[section][key] = formatter.parse(config[section][key])
 
         with StringIO() as f:
             config.write(f, space_around_delimiters=False)
