@@ -10,6 +10,37 @@ def nrgb(r, g, b):
     return rgb(r, g, b) - 0x1000000
 
 
+BLEND_MODES = {
+    "normal":   0b00000000,
+    "add":      0b00000001,
+    "overlay":  0b00000100,
+    "multiply": 0b00000011,
+    "dodge":    0b00000010,
+    "hsv":      0b11111110,
+}
+
+def blend(mode, frac):
+    # the blend mode is a 18-bit value, split into multiple parts:
+    # 
+    #     0b1 frac_____ mode____
+    #     0b1 100000000 11111110
+
+    # reaper's frac value is represented as a fraction: x / 256
+    # we need to find the nearest x value
+    if not 0 <= frac <= 1:
+        raise ValueError(f"Unknown blend fraction must be between 0 and 1: {frac}")
+
+    rp_frac = round(frac * 256)
+
+    # the mode value is just an enum
+    if not mode in BLEND_MODES:
+        raise ValueError(f"Unknown blend mode: {mode}")
+
+    rp_mode = BLEND_MODES[mode]
+
+    return 0b100000000000000000 + (rp_frac << 8) + rp_mode
+
+
 def split_hex(num):
     """
     Split a number into its 2-digit hex components.

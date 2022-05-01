@@ -35,6 +35,11 @@ def parse_single(string):
             int(match.group(2)),
             int(match.group(3)),
         )
+    elif match := re.fullmatch(r"blend\(([ \w]+),([ \d\.]+)\)", string):
+        return macros.blend(
+            match.group(1).strip(),
+            float(match.group(2)),
+        )
     # elif match := re.fullmatch(r"rgba\(([ \d]+),([ \d]+),([ \d]+),([ \d]+)\)", string):
     #     return macros.rgba(
     #         int(match.group(1)),
