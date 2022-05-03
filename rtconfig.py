@@ -17,5 +17,8 @@ def from_path(path: str):
 def from_paths(paths):
     contents = []
     for p in paths:
-        contents.append(from_path(p))
+        text = from_path(p)
+        # some rtconfig files may be empty, only append if text is non-empty
+        if len(text) != 0:
+            contents.append(text)
     return "\n".join(contents)
