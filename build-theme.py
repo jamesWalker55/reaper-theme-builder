@@ -4,7 +4,7 @@ from io import StringIO
 import os
 import zipfile
 import argparse
-import formatter
+import formatter, rtconfig
 
 
 parser = argparse.ArgumentParser()
@@ -121,14 +121,12 @@ class DirInfo:
         return allmap
 
     def build_rtconfig(self):
-        contents = []
+        paths = []
+
         for info in self.datadirs():
-            files = [f for f in info.datafiles if self.is_rtconfig(f)]
-            for f in files:
-                path = os.path.join(info.path, f)
-                with open(path, "r", encoding="utf8") as f:
-                    contents.append(f.read())
-        return "\n".join(contents)
+            paths.extend([os.path.join(info.path, f) for f in info.datafiles if self.is_rtconfig(f)])
+
+        return rtconfig.from_paths(paths)
 
     def build_rptheme(self):
         config = ConfigParser()
