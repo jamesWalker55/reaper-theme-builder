@@ -1,10 +1,8 @@
-from configparser import ConfigParser
 from dataclasses import dataclass, field
-from io import StringIO
 import os
 import zipfile
 import argparse
-import formatter, rtconfig
+import rtconfig, rptheme
 
 
 parser = argparse.ArgumentParser()
@@ -124,28 +122,29 @@ class DirInfo:
         paths = []
 
         for info in self.datadirs():
-            paths.extend([os.path.join(info.path, f) for f in info.datafiles if self.is_rtconfig(f)])
+            paths.extend(
+                [
+                    os.path.join(info.path, f)
+                    for f in info.datafiles
+                    if self.is_rtconfig(f)
+                ]
+            )
 
         return rtconfig.from_paths(paths)
 
     def build_rptheme(self):
-        config = ConfigParser()
+        files = []
 
         for info in self.datadirs():
-            files = [f for f in info.datafiles if self.is_rptheme(f)]
-            for f in files:
-                path = os.path.join(info.path, f)
-                config.read(path)
+            files.extend(
+                [
+                    os.path.join(info.path, f)
+                    for f in info.datafiles
+                    if self.is_rptheme(f)
+                ]
+            )
 
-        # apply macros
-        for section in config:
-            for key in config[section]:
-                config[section][key] = formatter.parse(config[section][key])
-
-        with StringIO() as f:
-            config.write(f, space_around_delimiters=False)
-            f.seek(0)
-            return f.read()
+        return rptheme.from_paths(files)
 
 
 def main():
