@@ -3,8 +3,7 @@ import os
 import zipfile
 from dataclasses import dataclass, field
 
-import rptheme
-import rtconfig
+from lib import rtconfig, rptheme
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input")
