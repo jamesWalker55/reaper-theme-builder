@@ -21,7 +21,7 @@ def parse(string):
 
 def parse_single(string):
     string = string.strip()
-    if re.fullmatch(r"0x[a-f\d]+", string):
+    if re.fullmatch(r"0x[a-fA-F\d]+", string):
         return macros.hexcolor(string)
     elif match := re.fullmatch(r"rgb\(([ \d]+),([ \d]+),([ \d]+)\)", string):
         return macros.rgb(
