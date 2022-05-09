@@ -1,9 +1,10 @@
-from dataclasses import dataclass, field
+import argparse
 import os
 import zipfile
-import argparse
-import rtconfig, rptheme
+from dataclasses import dataclass, field
 
+import rptheme
+import rtconfig
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input")
