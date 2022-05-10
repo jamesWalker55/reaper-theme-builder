@@ -1,7 +1,7 @@
 from io import StringIO
 from configparser import ConfigParser
 
-import lib.formatter as formatter
+from lib import formatter
 
 
 def from_paths(paths: list[str]):

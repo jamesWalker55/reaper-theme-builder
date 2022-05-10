@@ -1,7 +1,7 @@
 from string import Formatter
 import re
 
-import lib.macros as macros
+from lib import macros
 
 fmt = Formatter()
 
