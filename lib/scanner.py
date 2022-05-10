@@ -1,4 +1,6 @@
 import os
+import functools
+
 
 def is_rtconfig(path):
     return path.lower().endswith("rtconfig.txt")
@@ -34,7 +36,7 @@ class DirInfo:
             if entry.is_dir():
                 dirpaths.append(entry.path)
             else:
-                if cls.is_rtconfig(entry.path) or cls.is_rptheme(entry.path):
+                if is_rtconfig(entry.path) or is_rptheme(entry.path):
                     info._datafiles.append(entry.name)
                 else:
                     info._files.append(entry.name)
@@ -48,32 +50,24 @@ class DirInfo:
     def is_datadir(self):
         return len(self._datafiles) > 0
 
-    def datadirs(self: "DirInfo", reload=False):
+    @functools.cache
+    def datadirs(self):
         """all directories that have at least 1 datafile"""
-        if self._datadirs is None or reload:
-            self._reload_datadirs()
-
-        return self._datadirs
-
-    def _reload_datadirs(self):
-        """all directories that have at least 1 datafile"""
-        dirs: list["DirInfo"] = []
+        datadirs: list["DirInfo"] = []
         to_check = [self]
 
         while len(to_check) > 0:
             info = to_check.pop(0)
             to_check.extend(info._subdirs)
             if info.is_datadir():
-                dirs.append(info)
+                datadirs.append(info)
 
-        self._datadirs = dirs
+        return datadirs
 
-        return dirs
-
-    def _datadir_filemap(self):
+    def partial_filemap(self):
         """
         generate a partial filemap for a datadir
-        when creating the filemap, we exclude any subfolders that are datadirs:
+        when creating the filemap, this method excludes any subfolders that are datadirs:
 
         - 150/
             - a.png
@@ -105,36 +99,25 @@ class DirInfo:
 
         return filemap
 
+    @functools.cache
     def filemap(self):
+        """find all datadirs within this folder, and combine the filemaps from all of them"""
         allmap = []
         for info in self.datadirs():
-            allmap.extend(info._datadir_filemap())
+            allmap.extend(info.partial_filemap())
         return allmap
 
-    def build_rtconfig(self):
-        paths = []
-
-        for info in self.datadirs():
-            paths.extend(
-                [
-                    os.path.join(info._path, f)
-                    for f in info._datafiles
-                    if self.is_rtconfig(f)
-                ]
-            )
-
-        return rtconfig.from_paths(paths)
-
-    def build_rptheme(self):
+    @functools.cache
+    def datafiles(self):
         files = []
-
         for info in self.datadirs():
-            files.extend(
-                [
-                    os.path.join(info._path, f)
-                    for f in info._datafiles
-                    if self.is_rptheme(f)
-                ]
-            )
+            files.extend(os.path.join(info._path, n) for n in info._datafiles)
+        return files
 
-        return rptheme.from_paths(files)
+    @functools.cache
+    def rtconfig_paths(self):
+        return [p for p in self.datafiles() if is_rtconfig(p)]
+
+    @functools.cache
+    def rptheme_paths(self):
+        return [p for p in self.datafiles() if is_rptheme(p)]

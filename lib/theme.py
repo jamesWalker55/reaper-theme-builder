@@ -1,6 +1,6 @@
 import os.path
 import zipfile
-import rtconfig, rptheme
+from lib import rtconfig, rptheme
 
 
 class DuplicateResourceError(Exception):
@@ -13,31 +13,31 @@ class InvalidThemeNameError(Exception):
 
 class Theme:
     def __init__(self) -> None:
-        self.rtconfigs = []
-        self.rpthemes = []
+        self._rtconfigs = []
+        self._rpthemes = []
 
         # a map from archive paths to filesystem paths
-        self.res_map = {}
+        self._res_map = {}
 
     def add_resource(self, res_path, fs_path):
-        if res_path in self.res_map:
+        if res_path in self._res_map:
             raise DuplicateResourceError(
-                f"Resource {res_path!r} already exists with source: {self.res_map[res_path]!r}"
+                f"Resource {res_path!r} already exists with source: {self._res_map[res_path]!r}"
             )
 
-        self.res_map[res_path] = fs_path
+        self._res_map[res_path] = fs_path
 
     def add_rtconfig(self, path):
-        self.rtconfigs.append(path)
+        self._rtconfigs.append(path)
 
     def add_rptheme(self, path):
-        self.rpthemes.append(path)
+        self._rpthemes.append(path)
 
     def build_rtconfig(self):
-        return rtconfig.from_paths(self.rtconfigs)
+        return rtconfig.from_paths(self._rtconfigs)
 
     def build_rptheme(self):
-        return rptheme.from_paths(self.rpthemes)
+        return rptheme.from_paths(self._rpthemes)
 
     def write_zip(self, path, theme_name=None):
         path = os.path.abspath(path)  # abspath also calls normpath
@@ -55,7 +55,7 @@ class Theme:
             raise InvalidThemeNameError("The theme name cannot be empty.")
 
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
-            for res_path, fs_path in self.res_map.items():
+            for res_path, fs_path in self._res_map.items():
                 z.write(fs_path, arcname=os.path.join(theme_name, res_path))
 
             z.writestr(f"{theme_name}.ReaperTheme", self.build_rptheme())
