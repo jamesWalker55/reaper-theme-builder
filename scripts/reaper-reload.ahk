@@ -1,10 +1,17 @@
 ; contain WinTitle anywhere inside it to be a match
 SetTitleMatchMode 2
 
-; F5::
-WinActivate, REAPER v6.56
-Send ^{F5}{Alt Down}{Tab}{Alt Up}
-; return
+SearchTitle := "REAPER v6.57"
 
-; ^b::
-; Reload
+; make Reaper active
+WinActivate, %SearchTitle%
+
+; wait for Reaper to be active for real
+WinWaitActive %SearchTitle%, , 0.2
+if ErrorLevel
+{
+  MsgBox Unable to activate window '%SearchTitle%'. Stopping script...
+  Exit 1
+}
+
+Send ^{F5}{Alt Down}{Tab}{Alt Up}
