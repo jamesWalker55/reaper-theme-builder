@@ -1,7 +1,7 @@
 ; contain WinTitle anywhere inside it to be a match
 SetTitleMatchMode 2
 
-SearchTitle := "REAPER v6.57"
+SearchTitle := "REAPER v6.65"
 
 ; make Reaper active
 WinActivate, %SearchTitle%
@@ -14,4 +14,5 @@ if ErrorLevel
   Exit 1
 }
 
+; Send ^{F5}
 Send ^{F5}{Alt Down}{Tab}{Alt Up}
