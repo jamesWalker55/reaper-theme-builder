@@ -7,6 +7,12 @@ fmt = Formatter()
 
 
 def split(text):
+    # For a string like "hello{foo}bye", this will iterate as follows:
+    #   ("hello", "foo")
+    #   ("bye", None)
+    # The first element is actual literal text.
+    # The second element is the format '{...}' that comes after the literal text
+    # If the end of string is reached, the second element is None
     for prefix, key, _, _ in fmt.parse(text):
         yield prefix, key
 
