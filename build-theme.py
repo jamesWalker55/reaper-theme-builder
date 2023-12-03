@@ -29,6 +29,12 @@ parser.add_argument(
     help="strip comments and whitespace from the output rtconfig file",
     action="store_true",
 )
+parser.add_argument(
+    "-p",
+    "--preset-colors-path",
+    help="path to an ini file defining preset colors, use colors with the syntax 'p(section.name)'",
+    type=str,
+)
 
 
 def parse_extra_reapertheme_configs(args: list[list[str]]):
@@ -61,7 +67,10 @@ def main():
 
     info = DirInfo.scan(args.input)
 
-    theme = Theme(parse_extra_reapertheme_configs(args.config))
+    theme = Theme(
+        parse_extra_reapertheme_configs(args.config),
+        color_preset_path=args.preset_colors_path,
+    )
 
     print("Merging *.rtconfig files:")
     for p in info.rtconfig_paths():

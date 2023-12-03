@@ -2,6 +2,7 @@ from string import Formatter
 import re
 
 from lib import macros
+from lib.presetcolors import ColorPresetConfig
 
 fmt = Formatter()
 
@@ -17,12 +18,20 @@ def split(text):
         yield prefix, key
 
 
-def parse(string):
+def parse(string, presetcolors: ColorPresetConfig = None):
     result = []
     for prefix, key in split(string):
         result.append(prefix)
-        if key is not None:
-            result.append(str(parse_single(key)))
+        if key is None:
+            continue
+
+        if presetcolors is not None:
+            if match := re.fullmatch(r"p\(([^)]+)\)", key):
+                presetname = match.group(1).strip()
+                key = presetcolors.get_color(presetname)
+
+        key = str(parse_single(key))
+        result.append(key)
     return "".join(result)
 
 

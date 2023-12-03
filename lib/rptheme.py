@@ -2,9 +2,14 @@ from io import StringIO
 from configparser import ConfigParser
 
 from lib import formatter
+from lib.presetcolors import ColorPresetConfig
 
 
-def from_paths(paths: list[str], extra_configs: dict[str, dict[str, str]] = None):
+def from_paths(
+    paths: list[str],
+    extra_configs: dict[str, dict[str, str]] = None,
+    presetcolors: ColorPresetConfig = None,
+):
     if extra_configs is None:
         extra_configs = {}
 
@@ -23,7 +28,9 @@ def from_paths(paths: list[str], extra_configs: dict[str, dict[str, str]] = None
     # apply macros
     for section in config:
         for key in config[section]:
-            config[section][key] = formatter.parse(config[section][key])
+            config[section][key] = formatter.parse(
+                config[section][key], presetcolors=presetcolors
+            )
 
     with StringIO() as f:
         config.write(f, space_around_delimiters=False)

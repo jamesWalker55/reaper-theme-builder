@@ -1,6 +1,7 @@
 import os.path
 import zipfile
 from lib import rtconfig, rptheme
+from lib.presetcolors import ColorPresetConfig
 
 
 class DuplicateResourceError(Exception):
@@ -12,7 +13,11 @@ class InvalidThemeNameError(Exception):
 
 
 class Theme:
-    def __init__(self, extra_configs: dict[str, dict[str, str]] = None) -> None:
+    def __init__(
+        self,
+        extra_configs: dict[str, dict[str, str]] = None,
+        color_preset_path=None,
+    ) -> None:
         self._rtconfigs = []
         self._rpthemes = []
 
@@ -20,6 +25,11 @@ class Theme:
         self._res_map = {}
 
         self._extra_configs = extra_configs
+
+        if color_preset_path is not None:
+            self._presetcolors = ColorPresetConfig(color_preset_path)
+        else:
+            self._presetcolors = None
 
     def add_resource(self, res_path, fs_path):
         if res_path in self._res_map:
@@ -39,7 +49,11 @@ class Theme:
         return rtconfig.from_paths(self._rtconfigs, minify=minify)
 
     def build_rptheme(self):
-        return rptheme.from_paths(self._rpthemes, extra_configs=self._extra_configs)
+        return rptheme.from_paths(
+            self._rpthemes,
+            extra_configs=self._extra_configs,
+            presetcolors=self._presetcolors,
+        )
 
     def write_zip(self, path, theme_name=None, minify=False):
         path = os.path.abspath(path)  # abspath also calls normpath
