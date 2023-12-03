@@ -50,14 +50,19 @@ def main():
 
     theme = Theme(parse_extra_reapertheme_configs(args.config))
 
+    print("Merging *.rtconfig files:")
     for p in info.rtconfig_paths():
+        print(f"  {p}")
         theme.add_rtconfig(p)
 
+    print("Merging *.ReaperTheme files:")
     for p in info.rptheme_paths():
+        print(f"  {p}")
         theme.add_rptheme(p)
 
+    print("Adding resources:")
     for path, arcpath in info.filemap():
-        print("Add resource:", arcpath, path)
+        print(f"  [{arcpath}]: {path}")
         theme.add_resource(arcpath, path)
 
     print(f"Writing ZIP file to {args.output}")
