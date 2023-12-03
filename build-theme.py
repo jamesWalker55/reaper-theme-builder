@@ -16,6 +16,13 @@ parser.add_argument(
     default=[],
     action="append",
 )
+parser.add_argument(
+    "-d",
+    "--debug",
+    help="create extra ReaperTheme and rtconfig files alongside the output Zip file",
+    default=[],
+    action="store_true",
+)
 
 
 def parse_extra_reapertheme_configs(args: list[list[str]]):
@@ -36,7 +43,7 @@ def main():
     args = parser.parse_args()
 
     args.input = os.path.abspath(args.input)
-    output_name = os.path.split(args.output)[1]
+    output_dir, output_name = os.path.split(args.output)
     output_stem, output_ext = os.path.splitext(output_name)
     theme_name = output_stem
 
@@ -68,6 +75,17 @@ def main():
     print(f"Writing ZIP file to {args.output}")
 
     theme.write_zip(args.output, theme_name=theme_name)
+
+    if args.debug:
+        print(f"Writing debug files to same directory")
+        debug_rptheme_path = os.path.join(output_dir, f"{theme_name}.ReaperTheme")
+        debug_rtconfig_path = os.path.join(output_dir, f"{theme_name}.rtconfig.txt")
+        print(f"  [ReaperTheme] {debug_rptheme_path}")
+        with open(debug_rptheme_path, "w", encoding="utf8") as f:
+            f.write(theme.build_rptheme())
+        print(f"  [rtconfig] {debug_rtconfig_path}")
+        with open(debug_rtconfig_path, "w", encoding="utf8") as f:
+            f.write(theme.build_rtconfig())
 
     print("Success!")
 
