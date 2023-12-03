@@ -27,7 +27,7 @@ class DirInfo:
         self._datadirs = None
 
     @classmethod
-    def scan(cls, path):
+    def scan(cls, path, png_only=True):
         info = cls(path)
 
         dirpaths = []
@@ -39,6 +39,9 @@ class DirInfo:
                 if is_rtconfig(entry.path) or is_rptheme(entry.path):
                     info._datafiles.append(entry.name)
                 else:
+                    if png_only and not entry.name.lower().endswith(".png"):
+                        continue
+
                     info._files.append(entry.name)
 
         for path in dirpaths:

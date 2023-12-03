@@ -35,6 +35,12 @@ parser.add_argument(
     help="path to an ini file defining preset colors, use colors with the syntax 'p(section.name)'",
     type=str,
 )
+parser.add_argument(
+    "-all",
+    "--all-resources",
+    help="add all files found in the source folder to the theme, instead of only adding .png files",
+    action="store_true",
+)
 
 
 def parse_extra_reapertheme_configs(args: list[list[str]]):
@@ -65,7 +71,7 @@ def main():
     print(f"Using {theme_name!r} as the theme name.")
     print(f"Scanning folder: {args.input}")
 
-    info = DirInfo.scan(args.input)
+    info = DirInfo.scan(args.input, png_only=not args.all_resources)
 
     theme = Theme(
         parse_extra_reapertheme_configs(args.config),
