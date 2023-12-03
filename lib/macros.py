@@ -10,6 +10,7 @@ def nrgb(r, g, b):
     return rgb(r, g, b) - 0x1000000
 
 
+# fmt: off
 BLEND_MODES = {
     "normal":   0b00000000,
     "add":      0b00000001,
@@ -18,10 +19,12 @@ BLEND_MODES = {
     "dodge":    0b00000010,
     "hsv":      0b11111110,
 }
+# fmt: on
+
 
 def blend(mode, frac):
     # the blend mode is a 18-bit value, split into multiple parts:
-    # 
+    #
     #     0b1 frac_____ mode____
     #     0b1 100000000 11111110
 
