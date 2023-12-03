@@ -1,18 +1,15 @@
-; contain WinTitle anywhere inside it to be a match
+; set title matching behaviour
+; 2 = title contains the text anywhere inside it
 SetTitleMatchMode 2
 
-SearchTitle := "REAPER v6.65"
-
-; make Reaper active
-WinActivate, %SearchTitle%
-
-; wait for Reaper to be active for real
-WinWaitActive %SearchTitle%, , 0.2
-if ErrorLevel
-{
-  MsgBox Unable to activate window '%SearchTitle%'. Stopping script...
-  Exit 1
+; find the Reaper window, using the following criteria:
+; - title contains "REAPER"
+; - process name is "reaper.exe"
+; - window class is "REAPERwnd" (found with AHK Window Spy)
+hwnd := WinGetID("REAPER ahk_exe reaper.exe ahk_class REAPERwnd")
+if !hwnd {
+  throw Error("Reaper window not found")
 }
 
-; Send ^{F5}
-Send ^{F5}{Alt Down}{Tab}{Alt Up}
+; send Ctrl+F5 to Reaper
+ControlSend "^{F5}", hwnd
