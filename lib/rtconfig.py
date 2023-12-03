@@ -9,15 +9,18 @@ def trim(text: str):
     return "\n".join(lines)
 
 
-def from_path(path: str):
+def from_path(path: str, *, minify=False):
     with open(path, "r", encoding="utf8") as f:
-        return trim(f.read())
+        if minify:
+            return trim(f.read())
+        else:
+            return f.read()
 
 
-def from_paths(paths):
+def from_paths(paths, *, minify=False):
     contents = []
     for p in paths:
-        text = from_path(p)
+        text = from_path(p, minify=minify)
         # some rtconfig files may be empty, only append if text is non-empty
         if len(text) != 0:
             contents.append(text)

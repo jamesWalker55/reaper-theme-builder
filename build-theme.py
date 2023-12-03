@@ -23,6 +23,13 @@ parser.add_argument(
     default=[],
     action="store_true",
 )
+parser.add_argument(
+    "-m",
+    "--minify",
+    help="strip comments and whitespace from the output rtconfig file",
+    default=[],
+    action="store_true",
+)
 
 
 def parse_extra_reapertheme_configs(args: list[list[str]]):
@@ -74,7 +81,7 @@ def main():
 
     print(f"Writing ZIP file to {args.output}")
 
-    theme.write_zip(args.output, theme_name=theme_name)
+    theme.write_zip(args.output, theme_name=theme_name, minify=args.minify)
 
     if args.debug:
         print(f"Writing debug files to same directory")
@@ -85,7 +92,7 @@ def main():
             f.write(theme.build_rptheme())
         print(f"  [rtconfig] {debug_rtconfig_path}")
         with open(debug_rtconfig_path, "w", encoding="utf8") as f:
-            f.write(theme.build_rtconfig())
+            f.write(theme.build_rtconfig(minify=args.minify))
 
     print("Success!")
 

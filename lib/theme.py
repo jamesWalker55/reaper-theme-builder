@@ -35,13 +35,13 @@ class Theme:
     def add_rptheme(self, path):
         self._rpthemes.append(path)
 
-    def build_rtconfig(self):
-        return rtconfig.from_paths(self._rtconfigs)
+    def build_rtconfig(self, *, minify=False):
+        return rtconfig.from_paths(self._rtconfigs, minify=minify)
 
     def build_rptheme(self):
         return rptheme.from_paths(self._rpthemes, extra_configs=self._extra_configs)
 
-    def write_zip(self, path, theme_name=None):
+    def write_zip(self, path, theme_name=None, minify=False):
         path = os.path.abspath(path)  # abspath also calls normpath
 
         output_name = os.path.split(path)[1]
@@ -61,4 +61,4 @@ class Theme:
                 z.write(fs_path, arcname=os.path.join(theme_name, res_path))
 
             z.writestr(f"{theme_name}.ReaperTheme", self.build_rptheme())
-            z.writestr(f"{theme_name}/rtconfig.txt", self.build_rtconfig())
+            z.writestr(f"{theme_name}/rtconfig.txt", self.build_rtconfig(minify=minify))
