@@ -27,7 +27,6 @@ parser.add_argument(
     "-m",
     "--minify",
     help="strip comments and whitespace from the output rtconfig file",
-    default=[],
     action="store_true",
 )
 
