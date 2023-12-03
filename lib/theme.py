@@ -12,12 +12,14 @@ class InvalidThemeNameError(Exception):
 
 
 class Theme:
-    def __init__(self) -> None:
+    def __init__(self, extra_configs: dict[str, dict[str, str]] = None) -> None:
         self._rtconfigs = []
         self._rpthemes = []
 
         # a map from archive paths to filesystem paths
         self._res_map = {}
+
+        self._extra_configs = extra_configs
 
     def add_resource(self, res_path, fs_path):
         if res_path in self._res_map:
@@ -37,7 +39,7 @@ class Theme:
         return rtconfig.from_paths(self._rtconfigs)
 
     def build_rptheme(self):
-        return rptheme.from_paths(self._rpthemes)
+        return rptheme.from_paths(self._rpthemes, extra_configs=self._extra_configs)
 
     def write_zip(self, path, theme_name=None):
         path = os.path.abspath(path)  # abspath also calls normpath

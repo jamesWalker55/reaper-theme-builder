@@ -7,6 +7,29 @@ from lib.theme import Theme
 parser = argparse.ArgumentParser()
 parser.add_argument("input")
 parser.add_argument("output")
+parser.add_argument(
+    "-c",
+    "--config",
+    nargs=2,
+    metavar=("key", "value"),
+    help="override a value from the .ReaperTheme config",
+    default=[],
+    action="append",
+)
+
+
+def parse_extra_reapertheme_configs(args: list[list[str]]):
+    result = {}
+    for k, v in args:
+        if "." not in k:
+            raise ValueError(
+                f"key must contain a period ('.') to delimit the section: {k!r}"
+            )
+        section, k = k.split(".", 1)
+        if section not in result:
+            result[section] = {}
+        result[section][k] = v
+    return result
 
 
 def main():
@@ -25,7 +48,7 @@ def main():
 
     info = DirInfo.scan(args.input)
 
-    theme = Theme()
+    theme = Theme(parse_extra_reapertheme_configs(args.config))
 
     for p in info.rtconfig_paths():
         theme.add_rtconfig(p)
