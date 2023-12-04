@@ -9,7 +9,6 @@ readme = "README.md"
 python = "^3.10"
 simpleeval = "^0.9.13"
 
-
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
