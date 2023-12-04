@@ -1,5 +1,5 @@
-import os
 import functools
+import os
 
 
 def is_rtconfig(path):

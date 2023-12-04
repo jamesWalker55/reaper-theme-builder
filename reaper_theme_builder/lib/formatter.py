@@ -1,8 +1,8 @@
-from string import Formatter
 import re
+from string import Formatter
 
-from lib import macros
-from lib.presetcolors import ColorPresetConfig
+from . import macros
+from .presetcolors import ColorPresetConfig
 
 fmt = Formatter()
 

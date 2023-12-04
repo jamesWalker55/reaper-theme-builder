@@ -1,7 +1,8 @@
 import os.path
 import zipfile
-from lib import rtconfig, rptheme
-from lib.presetcolors import ColorPresetConfig
+
+from . import rptheme, rtconfig
+from .presetcolors import ColorPresetConfig
 
 
 class DuplicateResourceError(Exception):

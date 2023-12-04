@@ -1,8 +1,8 @@
 import argparse
 import os
 
-from lib.scanner import DirInfo
-from lib.theme import Theme
+from .lib.scanner import DirInfo
+from .lib.theme import Theme
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input")

@@ -1,8 +1,8 @@
-from io import StringIO
 from configparser import ConfigParser
+from io import StringIO
 
-from lib import formatter
-from lib.presetcolors import ColorPresetConfig
+from . import formatter
+from .presetcolors import ColorPresetConfig
 
 
 def from_paths(
