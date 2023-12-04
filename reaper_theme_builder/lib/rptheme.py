@@ -10,6 +10,7 @@ def from_paths(
     extra_configs: dict[str, dict[str, str]] = None,
     presetcolors: ColorPresetConfig = None,
 ):
+    """Load multiple *.ReaperTheme files and combine them into a single file"""
     if extra_configs is None:
         extra_configs = {}
 

@@ -11,6 +11,17 @@ def is_rptheme(path):
 
 
 class DirInfo:
+    """
+    A simple class that classifies paths into the 3 types of resources used in a Reaper
+    theme:
+    
+    - *.rtconfig.txt
+    - *.ReaperTheme
+    - Everything else (defaults to PNG only)
+
+    Both rtconfig and ReaperTheme files are considered as "datafiles".
+    """
+    
     def __init__(self, path, files=None, datafiles=None, subdirs=None) -> None:
         # the location of this directory
         self._path = os.path.abspath(path)
@@ -28,6 +39,7 @@ class DirInfo:
 
     @classmethod
     def scan(cls, path, png_only=True):
+        """Scan and classify a directory recursively."""
         info = cls(path)
 
         dirpaths = []
