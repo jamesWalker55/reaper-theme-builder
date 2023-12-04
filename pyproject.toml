@@ -13,3 +13,6 @@ simpleeval = "^0.9.13"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+rtb = "reaper_theme_builder:main"
