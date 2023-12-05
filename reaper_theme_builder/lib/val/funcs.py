@@ -19,9 +19,12 @@ def rgba(r, g, b, a):
     return (r << 24) + (g << 16) + (b << 8) + a
 
 
+NRGB_CONST = 0x1000000
+
+
 @register_func
 def nrgb(r, g, b):
-    return rgb(r, g, b) - 0x1000000
+    return rgb(r, g, b) - NRGB_CONST
 
 
 # fmt: off

@@ -1,3 +1,6 @@
+# This module is responsible for taking a string, then finding
+# format braces "{abc}" or "{{abc}}" in them.
+
 import re
 from string import Formatter
 
@@ -7,7 +10,13 @@ from .presetcolors import ColorPresetConfig
 fmt = Formatter()
 
 
-def split(text):
+def split_single(text: str):
+    """
+    Parser for single brace formatting, i.e.:
+    ```plain
+    The value of 1 + 2 is {1 + 2}
+    ```
+    """
     # For a string like "hello{foo}bye", this will iterate as follows:
     #   ("hello", "foo")
     #   ("bye", None)
@@ -17,10 +26,20 @@ def split(text):
     for prefix, key, _, _ in fmt.parse(text):
         yield prefix, key
 
+def split_double(text: str):
+    """
+    Parser for double brace formatting, i.e.:
+    ```plain
+    The value of 1 + 2 is {{1 + 2}}
+    ```
+    """
+    # TODO: re.finditer(pattern, string[, flags]) 
+    # TODO: re.findall(r"{{[^}]+}}", "a {{ewqq}} {{qew}hq}}}")
+    pass
 
 def parse(string, presetcolors: ColorPresetConfig | None = None):
     result = []
-    for prefix, key in split(string):
+    for prefix, key in split_single(string):
         result.append(prefix)
         if key is None:
             continue
