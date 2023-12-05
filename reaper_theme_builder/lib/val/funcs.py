@@ -1,11 +1,25 @@
+from typing import Callable
+
+
+FUNCTIONS = {}
+
+
+def register_func(func: Callable):
+    FUNCTIONS[func.__name__] = func
+    return func
+
+
+@register_func
 def rgb(r, g, b):
     return (b << 16) + (g << 8) + r
 
 
-# def rgba(r, g, b, a):
-#     return (r << 24) + (g << 16) + (b << 8) + a
+@register_func
+def rgba(r, g, b, a):
+    return (r << 24) + (g << 16) + (b << 8) + a
 
 
+@register_func
 def nrgb(r, g, b):
     return rgb(r, g, b) - 0x1000000
 
@@ -22,7 +36,8 @@ BLEND_MODES = {
 # fmt: on
 
 
-def blend(mode, frac):
+@register_func
+def blend(mode: str, frac: float):
     # the blend mode is a 18-bit value, split into multiple parts:
     #
     #     0b1 frac_____ mode____
@@ -44,25 +59,22 @@ def blend(mode, frac):
     return 0b100000000000000000 + (rp_frac << 8) + rp_mode
 
 
-def split_hex(num):
+@register_func
+def rev(val: int):
     """
-    Split a number into its 2-digit hex components.
-    Outputs in reverse order (because reaper uses reverse order).
+    Given a hex number like 0x112233, reverse every 2 bytes to
+    follow Reaper's number format.
 
-    >>> split_hex(0x123456)
-    [86, 52, 18]  # [0x56, 0x34, 0x12]
+    i.e. The above number will return 0x332211
     """
-    nums = []
-    while num > 0:
-        nums.append(num & 0xFF)
-        num = num >> 8
-    return nums
-
-
-def hexcolor(code):
-    # code is like '0xff0055'
-    nums = split_hex(int(code, 16))
     result = 0
-    for i, n in enumerate(nums):
-        result += n << 8 * (len(nums) - i - 1)
+    while val > 0:
+        # split the number into the last 8 bits and the rest
+        remainder = val & 0xFF
+        val = val >> 8
+
+        # move the result 8 bits to the left, then add the remainder
+        # to the rightmost 8 bits
+        result = (result << 8) + remainder
+
     return result
