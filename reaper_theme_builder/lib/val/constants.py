@@ -2,11 +2,12 @@ from configparser import ConfigParser
 
 
 class ConstantsConfig:
-    def __init__(self, path) -> None:
+    def __init__(self, path: str | None = None) -> None:
         self._config = ConfigParser()
-        self._config.read(path)
+        if path:
+            self._config.read(path)
 
-    def get_color(self, full_name: str):
+    def get_constant(self, full_name: str):
         try:
             section, name = full_name.rsplit(".", maxsplit=1)
         except ValueError:
