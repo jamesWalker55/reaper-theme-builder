@@ -16,7 +16,7 @@ class InvalidThemeNameError(Exception):
 class Theme:
     def __init__(
         self,
-        extra_configs: dict[str, dict[str, str]] = None,
+        extra_configs: dict[str, dict[str, str]] | None = None,
         color_preset_path=None,
     ) -> None:
         self._rtconfigs = []

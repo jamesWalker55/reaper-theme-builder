@@ -18,7 +18,7 @@ def split(text):
         yield prefix, key
 
 
-def parse(string, presetcolors: ColorPresetConfig = None):
+def parse(string, presetcolors: ColorPresetConfig | None = None):
     result = []
     for prefix, key in split(string):
         result.append(prefix)

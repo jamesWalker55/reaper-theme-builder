@@ -7,8 +7,8 @@ from .presetcolors import ColorPresetConfig
 
 def from_paths(
     paths: list[str],
-    extra_configs: dict[str, dict[str, str]] = None,
-    presetcolors: ColorPresetConfig = None,
+    extra_configs: dict[str, dict[str, str]] | None = None,
+    presetcolors: ColorPresetConfig | None = None,
 ):
     """Load multiple *.ReaperTheme files and combine them into a single file"""
     if extra_configs is None:
