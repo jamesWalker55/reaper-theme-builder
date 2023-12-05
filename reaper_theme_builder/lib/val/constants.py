@@ -20,3 +20,6 @@ class ConstantsConfig:
             raise ValueError(f"Constant name not found in section {section!r}: {name}")
 
         return self._config[section][name]
+
+    def __len__(self):
+        return sum(len(self._config[section]) for section in self._config)

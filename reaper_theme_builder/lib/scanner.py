@@ -14,28 +14,26 @@ class DirInfo:
     """
     A simple class that classifies paths into the 3 types of resources used in a Reaper
     theme:
-    
+
     - *.rtconfig.txt
     - *.ReaperTheme
     - Everything else (defaults to PNG only)
 
     Both rtconfig and ReaperTheme files are considered as "datafiles".
     """
-    
+
     def __init__(self, path, files=None, datafiles=None, subdirs=None) -> None:
         # the location of this directory
         self._path = os.path.abspath(path)
 
         # files in this directory, excluding data files like rtconfig.txt
-        self._files = [] if files is None else files
+        self._files: list[str] = [] if files is None else files
 
         # data files this directory
-        self._datafiles = [] if datafiles is None else datafiles
+        self._datafiles: list[str] = [] if datafiles is None else datafiles
 
         # subdirectories in this directory
-        self._subdirs = [] if subdirs is None else subdirs
-
-        self._datadirs = None
+        self._subdirs: list[DirInfo] = [] if subdirs is None else subdirs
 
     @classmethod
     def scan(cls, path, png_only=True):
@@ -117,16 +115,13 @@ class DirInfo:
     @functools.cache
     def filemap(self):
         """find all datadirs within this folder, and combine the filemaps from all of them"""
-        allmap = []
-        for info in self.datadirs():
-            allmap.extend(info.partial_filemap())
-        return allmap
+        return [x for info in self.datadirs() for x in info.partial_filemap()]
 
     @functools.cache
     def datafiles(self):
-        files = []
+        files: list[str] = []
         for info in self.datadirs():
-            files.extend(os.path.join(info._path, n) for n in info._datafiles)
+            files.extend(os.path.join(info._path, file) for file in info._datafiles)
         return files
 
     @functools.cache
