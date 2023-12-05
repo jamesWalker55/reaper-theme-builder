@@ -1,8 +1,9 @@
 import os.path
 import zipfile
-
-from . import rptheme, rtconfig
-from .presetcolors import ColorPresetConfig
+from configparser import ConfigParser
+from io import StringIO
+from pathlib import Path
+from typing import NamedTuple
 
 
 class DuplicateResourceError(Exception):
@@ -13,67 +14,56 @@ class InvalidThemeNameError(Exception):
     pass
 
 
-class Theme:
-    def __init__(
-        self,
-        extra_configs: dict[str, dict[str, str]] | None = None,
-        color_preset_path=None,
-    ) -> None:
-        self._rtconfigs = []
-        self._rpthemes = []
+class Resource(NamedTuple):
+    # The local path to the resource file you want to include
+    src: Path
+    # The virtual ZIP path to write the resource to
+    dst: Path
 
-        # a map from archive paths to filesystem paths
-        self._res_map = {}
 
-        self._extra_configs = extra_configs
+def create_theme(
+    path,
+    *,
+    rtconfig: str | None = None,
+    rptheme: ConfigParser | None = None,
+    resources: list[Resource] | None = None,
+):
+    if rtconfig is None:
+        rtconfig = ""
+    if rptheme is None:
+        rptheme = ConfigParser()
+    if resources is None:
+        resources = []
 
-        if color_preset_path is not None:
-            self._presetcolors = ColorPresetConfig(color_preset_path)
-        else:
-            self._presetcolors = None
+    # resolve the real path to the outpu
+    # abspath also calls normpath
+    path = Path(os.path.abspath(path))
 
-    def add_resource(self, res_path, fs_path):
-        if res_path in self._res_map:
+    # validate the output path
+    if not path.name.lower().endswith(".reaperthemezip"):
+        raise ValueError("Output extension must be .ReaperThemeZip")
+    if len(path.stem) == 0:
+        raise InvalidThemeNameError("The theme name cannot be empty.")
+
+    # validation for the list of resources
+    seen_dst_paths = set()
+    for src_path, dst_path in resources:
+        if dst_path in seen_dst_paths:
             raise DuplicateResourceError(
-                f"Resource {res_path!r} already exists with source: {self._res_map[res_path]!r}"
+                f"The destination {dst_path!r} has already been assigned to a different resource: {src_path}"
             )
 
-        self._res_map[res_path] = fs_path
+        seen_dst_paths.add(dst_path)
 
-    def add_rtconfig(self, path):
-        self._rtconfigs.append(path)
+    # serialise the rptheme ConfigParser into string
+    with StringIO() as f:
+        rptheme.write(f, space_around_delimiters=False)
+        rptheme_serialized = f.getvalue()
 
-    def add_rptheme(self, path):
-        self._rpthemes.append(path)
+    # create the zip and write resources into it
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for src_path, dst_path in resources:
+            z.write(src_path, arcname=os.path.join(path.stem, dst_path))
 
-    def build_rtconfig(self, *, minify=False):
-        return rtconfig.from_paths(self._rtconfigs, minify=minify)
-
-    def build_rptheme(self):
-        return rptheme.from_paths(
-            self._rpthemes,
-            extra_configs=self._extra_configs,
-            presetcolors=self._presetcolors,
-        )
-
-    def write_zip(self, path, theme_name=None, minify=False):
-        path = os.path.abspath(path)  # abspath also calls normpath
-
-        output_name = os.path.split(path)[1]
-        output_stem, output_ext = os.path.splitext(output_name)
-
-        if output_ext.lower() != ".reaperthemezip":
-            raise ValueError("Output extension must be .ReaperThemeZip")
-
-        if theme_name is None:
-            theme_name = output_stem
-
-        if len(theme_name) == 0:
-            raise InvalidThemeNameError("The theme name cannot be empty.")
-
-        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
-            for res_path, fs_path in self._res_map.items():
-                z.write(fs_path, arcname=os.path.join(theme_name, res_path))
-
-            z.writestr(f"{theme_name}.ReaperTheme", self.build_rptheme())
-            z.writestr(f"{theme_name}/rtconfig.txt", self.build_rtconfig(minify=minify))
+        z.writestr(f"{path.stem}.ReaperTheme", rptheme_serialized)
+        z.writestr(f"{path.stem}/rtconfig.txt", rtconfig)
