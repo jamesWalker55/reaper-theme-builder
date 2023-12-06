@@ -80,6 +80,12 @@ class DirInfo:
     def partial_filemap(self):
         """
         generate a partial filemap for a datadir
+
+        a filemap is a map from local paths to archive paths. by "partial" it means
+        this function only returns the local paths provided by the current data dir
+        (a folder containing a data file). this can include resources from subfolders
+        that aren't data dirs.
+        
         when creating the filemap, this method excludes any subfolders that are datadirs:
 
         - 150/
