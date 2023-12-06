@@ -31,9 +31,9 @@ def hex(*args: int):
 NRGB_CONST = 0x1000000
 
 
-@register_func
-def nrgb(r, g, b):
-    return rgb(r, g, b) - NRGB_CONST
+# @register_func
+# def nrgb(r, g, b):
+#     return rgb(r, g, b) - NRGB_CONST
 
 
 # fmt: off
