@@ -1,6 +1,6 @@
 import functools
 
-from simpleeval import simple_eval
+from simpleeval import SimpleEval
 
 from .constants import ConstantsConfig
 from .formatter import split_double, split_single
@@ -13,6 +13,8 @@ class Evaluator:
             constants = ConstantsConfig(None)
 
         self._constants = constants
+
+        self._simple_eval = SimpleEval(functions=self._functions(), names=self._names())
 
     @functools.cache
     def get_constant(self, full_name: str):
@@ -31,11 +33,7 @@ class Evaluator:
         }
 
     def val(self, text: str):
-        return simple_eval(
-            text,
-            functions=self._functions(),
-            names=self._names(),
-        )
+        return self._simple_eval.eval(text)
 
     def parse_single(self, text: str):
         result = []
