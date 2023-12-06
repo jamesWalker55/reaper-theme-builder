@@ -1,6 +1,5 @@
 from typing import Callable
 
-
 FUNCTIONS = {}
 
 
@@ -15,8 +14,18 @@ def rgb(r, g, b):
 
 
 @register_func
-def rgba(r, g, b, a):
-    return (r << 24) + (g << 16) + (b << 8) + a
+def hex(*args: int):
+    result = 0
+    for i in args:
+        assert isinstance(i, int)
+        assert 0x00 <= i <= 0xFF
+        result = (result << 8) + i
+    return result
+
+
+# @register_func
+# def rgba(r, g, b, a):
+#     return (r << 24) + (g << 16) + (b << 8) + a
 
 
 NRGB_CONST = 0x1000000
