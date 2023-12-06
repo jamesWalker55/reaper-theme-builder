@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .lib import rptheme, rtconfig
 from .lib.scanner import DirInfo
+from .lib.theme import Resource, create_theme
 from .lib.val.constants import ConstantsConfig
 from .lib.val.evaluator import Evaluator
 
@@ -69,69 +70,68 @@ def parse_extra_reapertheme_configs(args: list[list[str]]):
 def main():
     args = parser.parse_args()
 
+    def log(*x):
+        if not args.verbose:
+            return
+
+        print(*x)
+
     # convert to absolute path to ensure we can get the directory name
     input_dir: Path = args.input.absolute().resolve()
     output_file: Path = args.output
-    theme_name = input_dir.stem
 
     # validation
     if output_file.suffix.lower() != ".reaperthemezip":
         raise ValueError("Output extension must be .ReaperThemeZip")
 
-    print(f"Using {theme_name!r} as the theme name.")
     print(f"Scanning folder: {input_dir}")
 
     # scan and build list of files
     dirinfo = DirInfo.scan(input_dir, png_only=not args.all_resources)
 
     # construct initial config and stuff
-    if args.verbose:
-        print(f"Adding {len(dirinfo.filemap())} resources:")
-        for src, dst in dirinfo.filemap():
-            print(f"  [{dst}]: {src}")
-    else:
-        print(f"Adding {len(dirinfo.filemap())} resources...")
+    print(f"Adding {len(dirinfo.filemap())} resources...")
+    res: list[Resource] = []
+    for src, dst in res:
+        res.append(Resource(src, dst))
+        log(f"  [{dst}]: {src}")
 
-    if args.verbose:
-        print(f"Merging {len(dirinfo.rtconfig_paths())} *.rtconfig files:")
-        for path in dirinfo.rtconfig_paths():
-            print(f"  {path}")
-    else:
-        print(f"Merging {len(dirinfo.rtconfig_paths())} *.rtconfig files...")
+    print(f"Merging {len(dirinfo.rtconfig_paths())} *.rtconfig files...")
+    for path in dirinfo.rtconfig_paths():
+        log(f"  {path}")
     rtc = rtconfig.from_paths(dirinfo.rtconfig_paths())
 
-    if args.verbose:
-        print(f"Merging {len(dirinfo.rptheme_paths())} *.ReaperTheme files:")
-        for path in dirinfo.rptheme_paths():
-            print(f"  {path}")
-    else:
-        print(f"Merging {len(dirinfo.rptheme_paths())} *.ReaperTheme files...")
+    print(f"Merging {len(dirinfo.rptheme_paths())} *.ReaperTheme files...")
+    for path in dirinfo.rptheme_paths():
+        log(f"  {path}")
     rpt = rptheme.from_paths(dirinfo.rptheme_paths())
 
     # post-process
     print("Post processing rtconfig and ReaperTheme...")
     constants = ConstantsConfig(args.constants_path)
-    if args.verbose:
-        print(f"  Loaded {len(constants)} constants")
+    log(f"  Loaded {len(constants)} constants")
     evaluator = Evaluator(constants=constants)
+    # proces rtconfig
     rtc = evaluator.parse_double(rtc)
+    # process ReaperTheme
     for section in rpt:
         for key in rpt[section]:
             rpt[section][key] = evaluator.parse_single(rpt[section][key])
 
-    # print(f"Writing ZIP file to {args.output}")
+    print(f"Writing ZIP file to {args.output}")
 
-    # theme.write_zip(args.output, theme_name=theme_name, minify=args.minify)
+    create_theme(output_file, rtconfig=rtc, rptheme=rpt, resources=res)
 
-    # if args.debug:
-    #     print(f"Writing debug files to same directory")
-    #     debug_rptheme_path = os.path.join(output_dir, f"{theme_name}.ReaperTheme")
-    #     debug_rtconfig_path = os.path.join(output_dir, f"{theme_name}.rtconfig.txt")
-    #     print(f"  [ReaperTheme] {debug_rptheme_path}")
-    #     with open(debug_rptheme_path, "w", encoding="utf8") as f:
-    #         f.write(theme.build_rptheme())
-    #     print(f"  [rtconfig] {debug_rtconfig_path}")
-    #     with open(debug_rtconfig_path, "w", encoding="utf8") as f:
-    #         f.write(theme.build_rtconfig(minify=args.minify))
+    if args.debug:
+        rtc_path = output_file.with_suffix(".rtconfig.txt")
+        print(f"  [rtconfig] {rtc_path}")
+        with open(rtc_path, "w", encoding="utf8") as f:
+            f.write(rtc)
 
-    # print("Success!")
+        rpt_path = output_file.with_suffix(".ReaperTheme")
+        print(f"  [ReaperTheme] {rpt_path}")
+        # serialise the rptheme ConfigParser into string
+        with open(rpt_path, "w", encoding="utf8") as f:
+            rpt.write(f, space_around_delimiters=False)
+
+    print("Success!")
