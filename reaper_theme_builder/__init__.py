@@ -5,6 +5,7 @@ from pathlib import Path
 from .lib import rptheme, rtconfig
 from .lib.scanner import DirInfo
 from .lib.theme import Resource, create_theme
+from .lib.utils import get_config_section_and_key
 from .lib.val.constants import ConstantsConfig
 from .lib.val.evaluator import Evaluator
 
@@ -16,7 +17,7 @@ parser.add_argument(
     "--config",
     nargs=2,
     metavar=("key", "value"),
-    help="override a value from the .ReaperTheme config",
+    help="overwrite a value in the .ReaperTheme config",
     default=[],
     action="append",
 )
@@ -105,6 +106,11 @@ def main():
     for path in dirinfo.rptheme_paths():
         log(f"  {path}")
     rpt = rptheme.from_paths(dirinfo.rptheme_paths())
+
+    # assign extra configs from the command line
+    for fullname, value in args.config:
+        section, key = get_config_section_and_key(rpt, fullname)
+        rpt[section][key] = value
 
     # post-process
     print("Post processing rtconfig and ReaperTheme...")
