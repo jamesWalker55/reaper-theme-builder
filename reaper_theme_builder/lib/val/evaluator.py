@@ -1,3 +1,5 @@
+import functools
+
 from simpleeval import simple_eval
 
 from .constants import ConstantsConfig
@@ -12,10 +14,15 @@ class Evaluator:
 
         self._constants = constants
 
+    @functools.cache
+    def get_constant(self, full_name: str):
+        raw_value = self._constants.get_constant(full_name)
+        return self.val(raw_value)
+
     def _functions(self):
         return {
             **FUNCTIONS,
-            "c": self._constants.get_constant,
+            "c": self.get_constant,
         }
 
     def _names(self):
