@@ -93,8 +93,8 @@ def main():
     # construct initial config and stuff
     print(f"Adding {len(dirinfo.filemap())} resources...")
     res: list[Resource] = []
-    for src, dst in res:
-        res.append(Resource(src, dst))
+    for src, dst in dirinfo.filemap():
+        res.append(Resource(Path(src), Path(dst)))
         log(f"  [{dst}]: {src}")
 
     print(f"Merging {len(dirinfo.rtconfig_paths())} *.rtconfig files...")
