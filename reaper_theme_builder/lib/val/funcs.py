@@ -23,6 +23,27 @@ def hex(*args: int):
     return result
 
 
+@register_func
+def arr(val: int):
+    """
+    Given a hex number like 0x112233, split it into bytes, then
+    return a space-separated string of those numbers in decimal.
+
+    i.e. The above number will return "17 34 51"
+    """
+    result = []
+    while val > 0:
+        # split the number into the last 8 bits and the rest
+        remainder = val & 0xFF
+        val = val >> 8
+
+        result.append(remainder)
+
+    result.reverse()
+
+    return " ".join(str(i) for i in result)
+
+
 # @register_func
 # def rgba(r, g, b, a):
 #     return (r << 24) + (g << 16) + (b << 8) + a
