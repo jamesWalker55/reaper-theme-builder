@@ -100,7 +100,7 @@ def main():
     print(f"Merging {len(dirinfo.rtconfig_paths())} *.rtconfig files...")
     for path in dirinfo.rtconfig_paths():
         log(f"  {path}")
-    rtc = rtconfig.from_paths(dirinfo.rtconfig_paths())
+    rtc = rtconfig.from_paths(dirinfo.rtconfig_paths(), minify=args.minify)
 
     print(f"Merging {len(dirinfo.rptheme_paths())} *.ReaperTheme files...")
     for path in dirinfo.rptheme_paths():
