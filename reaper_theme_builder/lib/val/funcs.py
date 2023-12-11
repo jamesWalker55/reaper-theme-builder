@@ -56,6 +56,8 @@ def set(
     rs: str | None = None,
     bs: str | None = None,
     condition: str | None = None,
+    add: str | None = None,
+    sub: str | None = None,
 ):
     """
     This generates `set ...` code for rtconfig.txt. This is to overcome WALTER's
@@ -99,6 +101,11 @@ def set(
     rs = resolve("rs", rs)
     bs = resolve("bs", bs)
 
+    if add is not None:
+        add = resolve("add", add)
+    if sub is not None:
+        sub = resolve("sub", sub)
+
     result_list = [x, y, w, h, ls, ts, rs, bs]
 
     # store all lines to output
@@ -108,17 +115,24 @@ def set(
     for temp_var_name, expression in temp_variables.items():
         lines.append(f"set {temp_var_name} {expression}")
 
-    # create the final assignment line
-    if condition is None:
-        lines.append(f"set {target} [{' '.join(result_list)}]")
-    else:
+    # build the final expression to set the target
+    expr = f"[{' '.join(result_list)}]"
+
+    if add is not None:
+        expr = f"+ {expr} {add}"
+
+    if sub is not None:
+        expr = f"- {expr} {sub}"
+
+    if condition is not None:
         # we need to count the number of conditions
         # i'm assuming that conditions are space-separated, so just split and count
         condition = condition.strip()
         condition_count = len(condition.split())
-        lines.append(
-            f"set {target} {condition} [{' '.join(result_list)}] {' '.join('.' for _ in range(condition_count))}"
-        )
+        expr = f"{condition} {expr} {' '.join('.' for _ in range(condition_count))}"
+
+    # create the final assignment line
+    lines.append(f"set {target} {expr}")
 
     return "\n".join(lines)
 
