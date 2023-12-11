@@ -59,6 +59,7 @@ def set(
     add: str | None = None,
     sub: str | None = None,
     _else: str | None = None,
+    inherit: bool = False,
 ):
     """
     This generates `set ...` code for rtconfig.txt. This is to overcome WALTER's
@@ -72,13 +73,14 @@ def set(
         variables with `temp_variables`.
 
         - Simple values like numbers are returned as-is
-        - Empty values are assumed to be left alone so we return '.'
+        - Empty values are assumed to be left alone so we return '.' if inherit is true,
+          otherwise set to 0
         - Complex values cannot be used in a coordinate list, so we assign a temporary
           variable and return that instead
         """
         if value is None:
-            # use existing value syntax "."
-            return "."
+            # use existing value syntax "." if inheriting
+            return "." if inherit else "0"
 
         value = value.strip()
         if len(value.split()) > 1:
