@@ -58,6 +58,7 @@ def set(
     condition: str | None = None,
     add: str | None = None,
     sub: str | None = None,
+    _else: str | None = None,
 ):
     """
     This generates `set ...` code for rtconfig.txt. This is to overcome WALTER's
@@ -100,6 +101,7 @@ def set(
     ts = resolve("ts", ts)
     rs = resolve("rs", rs)
     bs = resolve("bs", bs)
+    _else = resolve("else", _else)
 
     if add is not None:
         add = resolve("add", add)
@@ -129,7 +131,7 @@ def set(
         # i'm assuming that conditions are space-separated, so just split and count
         condition = condition.strip()
         condition_count = len(condition.split())
-        expr = f"{condition} {expr} {' '.join('.' for _ in range(condition_count))}"
+        expr = f"{condition} {expr} {' '.join(_else for _ in range(condition_count))}"
 
     # create the final assignment line
     lines.append(f"set {target} {expr}")
