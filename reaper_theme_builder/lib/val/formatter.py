@@ -24,6 +24,25 @@ def split_single(text: str):
         yield prefix, key
 
 
+def _create_split_double_pattern():
+    # basic definitions
+    nonbracket = r"[^{}]"
+    singlebracket_l = "{" + nonbracket
+    singlebracket_r = "}" + nonbracket
+
+    # build the actual pattern
+    # all above characters are allowed in the content
+    allowed_contents = "|".join([nonbracket, singlebracket_l, singlebracket_r])
+    # wrap in non-matching group
+    allowed_contents = f"(?:{allowed_contents})+"
+
+    return "{{(" + allowed_contents + ")}}"
+
+
+_SPLIT_DOUBLE_PATTERN = _create_split_double_pattern()
+_SPLIT_DOUBLE_REGEX = re.compile(_SPLIT_DOUBLE_PATTERN, flags=re.DOTALL)
+
+
 def split_double(text: str):
     """
     Parser for double brace formatting, i.e.:
@@ -32,7 +51,7 @@ def split_double(text: str):
     ```
     """
     last_match_end = 0
-    for match in re.finditer(r"{{([^{}]+)}}", text):
+    for match in _SPLIT_DOUBLE_REGEX.finditer(text):
         prefix = text[last_match_end : match.start()]
         yield prefix, match.group(1)
         last_match_end = match.end()
