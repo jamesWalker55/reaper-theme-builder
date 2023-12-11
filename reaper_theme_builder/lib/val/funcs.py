@@ -44,6 +44,85 @@ def arr(val: int):
     return " ".join(str(i) for i in result)
 
 
+@register_func
+def set(
+    target: str,
+    x: str | None = None,
+    y: str | None = None,
+    w: str | None = None,
+    h: str | None = None,
+    ls: str | None = None,
+    ts: str | None = None,
+    rs: str | None = None,
+    bs: str | None = None,
+    condition: str | None = None,
+):
+    """
+    This generates `set ...` code for rtconfig.txt. This is to overcome WALTER's
+    terrible syntax and provide better coding comfort.
+    """
+    temp_variables: dict[str, str] = {}
+
+    def resolve(temp_var_name: str, value: str | None):
+        """
+        This resolves any arbitrary expression to a single value, by creating temporary
+        variables with `temp_variables`.
+
+        - Simple values like numbers are returned as-is
+        - Empty values are assumed to be left alone so we return '.'
+        - Complex values cannot be used in a coordinate list, so we assign a temporary
+          variable and return that instead
+        """
+        if value is None:
+            # use existing value syntax "."
+            return "."
+
+        value = value.strip()
+        if len(value.split()) > 1:
+            # this is an expression with multiple terms
+            # must assign to external variable before setting target
+            temp_var_name = f"__{temp_var_name}"
+            temp_variables[temp_var_name] = value
+            return temp_var_name
+        else:
+            # this is a simple scalar or value
+            # no need to assign to external variable, return as-is
+            return value
+
+    # resolve all values such that they are all simple values
+    x = resolve("x", x)
+    y = resolve("y", y)
+    w = resolve("w", w)
+    h = resolve("h", h)
+    ls = resolve("ls", ls)
+    ts = resolve("ts", ts)
+    rs = resolve("rs", rs)
+    bs = resolve("bs", bs)
+
+    result_list = [x, y, w, h, ls, ts, rs, bs]
+
+    # store all lines to output
+    lines = []
+
+    # assign temporary variables (if any)
+    for temp_var_name, expression in temp_variables.items():
+        lines.append(f"set {temp_var_name} {expression}")
+
+    # create the final assignment line
+    if condition is None:
+        lines.append(f"set {target} [{' '.join(result_list)}]")
+    else:
+        # we need to count the number of conditions
+        # i'm assuming that conditions are space-separated, so just split and count
+        condition = condition.strip()
+        condition_count = len(condition.split())
+        lines.append(
+            f"set {target} {condition} [{' '.join(result_list)}] {' '.join('.' for _ in range(condition_count))}"
+        )
+
+    return "\n".join(lines)
+
+
 # @register_func
 # def rgba(r, g, b, a):
 #     return (r << 24) + (g << 16) + (b << 8) + a
