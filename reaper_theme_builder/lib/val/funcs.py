@@ -103,12 +103,11 @@ def set(
     ts = resolve("ts", ts)
     rs = resolve("rs", rs)
     bs = resolve("bs", bs)
-    _else = resolve("else", _else)
 
-    if add is not None:
-        add = resolve("add", add)
-    if sub is not None:
-        sub = resolve("sub", sub)
+    # resolve else only if it is empty
+    # else is required in WALTER, but we can still use any arbitrary expression
+    if _else is None:
+        _else = resolve("else", _else)
 
     result_list = [x, y, w, h, ls, ts, rs, bs]
 
