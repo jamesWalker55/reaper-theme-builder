@@ -14,13 +14,21 @@ def rgb(r, g, b):
 
 
 @register_func
-def hex(*args: int):
+def build_hex(*args: int):
     result = 0
     for i in args:
         assert isinstance(i, int)
         assert 0x00 <= i <= 0xFF
         result = (result << 8) + i
     return result
+
+
+_hex = hex
+
+
+@register_func
+def hex(val: int):
+    return _hex(val)[2:]
 
 
 @register_func
