@@ -54,6 +54,10 @@ class DirInfo:
 
                     info._files.append(entry.name)
 
+        # ensure files are in alphabetical order
+        info._files.sort()
+        info._datafiles.sort()
+
         for path in dirpaths:
             subinfo = cls.scan(path)
             info._subdirs.append(subinfo)
